@@ -4,7 +4,6 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth, OAuthError
-from .config import CLIENT_ID, CLIENT_SECRET
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
@@ -15,11 +14,11 @@ oauth = OAuth()
 oauth.register(
     name='google',
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    client_id=CLIENT_ID,
-    client_secret=CLIENT_SECRET,
+    client_id='923647480819-2mqr12c7ecrvhlsincgjmihb69mp4rfr.apps.googleusercontent.com',
+    client_secret='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',
     client_kwargs={
         'scope': 'email openid profile',
-        'redirect_url': 'http://localhost:8000/auth'
+        'redirect_url': 'http://localhost:8000/auth/callback'
     }
 )
 
@@ -39,9 +38,10 @@ def index(request: Request):
     )
 
 
-@app.get('/welcome')
+@app.get('/auth/welcome')
 def welcome(request: Request):
     user = request.session.get('user')
+    print(user['picture'])
     if not user:
         return RedirectResponse('/')
     return templates.TemplateResponse(
@@ -56,7 +56,7 @@ async def login(request: Request):
     return await oauth.google.authorize_redirect(request, url)
 
 
-@app.get('/auth')
+@app.get('/auth/callback')
 async def auth(request: Request):
     try:
         token = await oauth.google.authorize_access_token(request)
